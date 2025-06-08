@@ -2,7 +2,6 @@
 
 import { CardPosts } from "@/app/basic/card-posts";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import * as React from "react";
 
 const options = [
@@ -22,10 +21,12 @@ const options = [
         label: "Empty category",
         value: "empty",
     },
-];
+] as const;
+
+type Category = (typeof options)[number]["value"];
 
 export default function Page() {
-    const [category, setCategory] = React.useState<string>("technology");
+    const [category, setCategory] = React.useState<Category>("technology");
 
     return (
         <main className="flex flex-col items-center justify-center gap-5 px-4 py-4 lg:h-[calc(100dvh-55px)]">
@@ -42,9 +43,7 @@ export default function Page() {
                     </Button>
                 ))}
             </div>
-            <Card className="w-full flex-1 lg:w-124">
-                <CardPosts category={category} />
-            </Card>
+            <CardPosts category={category} />
         </main>
     );
 }
