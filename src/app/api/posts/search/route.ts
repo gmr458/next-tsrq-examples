@@ -4,7 +4,7 @@ import { Post, posts } from "../data";
 export async function GET(request: Request) {
     // Get search parameter from the URL
     const url = new URL(request.url);
-    const searchTerm = url.searchParams.get("search") || "";
+    const searchTerm = url.searchParams.get("q") || "";
 
     // Simulate network delay (between 500ms and 2000ms)
     const delay = Math.floor(Math.random() * 1500) + 500;

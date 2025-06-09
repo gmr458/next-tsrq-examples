@@ -1,73 +1,129 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
-import { fetchWrapper } from "@/lib/fetch-wrappers";
-import { useQuery } from "@tanstack/react-query";
-import * as React from "react";
-import { useDebounce } from "use-debounce";
-import { Post } from "../api/posts/data";
-import { CardPost, CardPostSkeleton } from "../basic/card-posts";
-import { useQueryState } from "nuqs";
+import { Post } from "@/app/api/posts/data";
+import { CardPost, CardPostSkeleton } from "@/app/basic/card-posts";
 import { Button } from "@/components/ui/button";
-import { XIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import {
     Tooltip,
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { fetchWrapper } from "@/lib/fetch-wrappers";
+import { useQuery } from "@tanstack/react-query";
+import { XIcon } from "lucide-react";
+import { useQueryState } from "nuqs";
+import * as React from "react";
+import { useDebounce } from "use-debounce";
+
+function SearchResults({
+    isLoading,
+    isError,
+    data,
+    searchTerm,
+}: {
+    isLoading: boolean;
+    isError: boolean;
+    data: Post[] | undefined;
+    searchTerm: string;
+}) {
+    if (isLoading) {
+        return (
+            <>
+                {Array.from({ length: 3 }).map((_, i) => (
+                    <CardPostSkeleton key={i} />
+                ))}
+            </>
+        );
+    }
+
+    if (isError) {
+        return (
+            <p className="text-destructive text-center">
+                An error occurred while fetching posts. Please try again.
+            </p>
+        );
+    }
+
+    if (data?.length === 0) {
+        return (
+            <p className="text-muted-foreground text-center">
+                No results found for &quot;{searchTerm}&quot;.
+            </p>
+        );
+    }
+
+    if (data) {
+        return (
+            <>
+                {data.map((post) => (
+                    <CardPost key={post.id} post={post} />
+                ))}
+            </>
+        );
+    }
+
+    return null;
+}
 
 export function Search() {
-    const [searchTerm, setSearchTerm] = useQueryState("", { defaultValue: "" });
+    const [searchTerm, setSearchTerm] = useQueryState("q", {
+        defaultValue: "",
+    });
     const [searchTermDebounced] = useDebounce(searchTerm, 300);
 
-    const { data, isLoading } = useQuery({
+    const { data, isLoading, isError } = useQuery({
         queryKey: ["posts", "search", searchTermDebounced],
         queryFn: () =>
-            fetchWrapper<Post[]>(
-                `/api/posts/search?search=${searchTermDebounced}`,
-            ),
+            fetchWrapper<Post[]>(`/api/posts/search?q=${searchTermDebounced}`),
         enabled: !!searchTermDebounced,
     });
 
     return (
-        <div className="flex w-full max-w-lg flex-col gap-5">
-            <div className="flex flex-col gap-1">
-                <h1 className="text-center text-2xl">Search</h1>
-                <div className="flex flex-row items-center justify-center gap-1">
+        <div className="flex w-full flex-col gap-6 px-4 lg:max-w-lg lg:px-0">
+            <div className="flex flex-col gap-2">
+                <h1 className="text-center text-3xl font-bold">Search Posts</h1>
+                <div className="relative flex items-center">
                     <Input
+                        placeholder="Search by title or content..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pr-10"
                     />
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                size="icon"
-                                onClick={() => setSearchTerm("")}
-                            >
-                                <XIcon />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>Clean</p>
-                        </TooltipContent>
-                    </Tooltip>
+                    {searchTerm && (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute right-1 h-7 w-7"
+                                    onClick={() => setSearchTerm(null)}
+                                >
+                                    <XIcon className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Clear search</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    )}
                 </div>
             </div>
-            {isLoading ? (
-                <div className="flex w-full max-w-lg flex-col gap-4">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                        <CardPostSkeleton key={i} />
-                    ))}
-                </div>
-            ) : null}
-            {data && data?.length > 0 ? (
-                <div className="flex w-full max-w-lg flex-col gap-4">
-                    {data.map((post) => (
-                        <CardPost key={post.id} post={post} />
-                    ))}
-                </div>
-            ) : null}
-            {!isLoading && data?.length === 0 ? <p>No data</p> : null}
+
+            <div className="flex flex-col gap-4">
+                {!searchTermDebounced ? (
+                    <p className="text-muted-foreground text-center">
+                        Start typing to see results.
+                    </p>
+                ) : (
+                    <SearchResults
+                        isLoading={isLoading}
+                        isError={isError}
+                        data={data}
+                        searchTerm={searchTermDebounced}
+                    />
+                )}
+            </div>
         </div>
     );
 }
