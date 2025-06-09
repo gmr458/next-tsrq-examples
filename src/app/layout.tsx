@@ -6,6 +6,7 @@ import { Header } from "@/components/header";
 import { TanStackQueryProvider } from "@/providers/tan-stack-query-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { ReactScan } from "@/components/react-scan";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -33,18 +34,20 @@ export default function RootLayout({
             <body
                 className={`${geistSans.variable} ${geistMono.variable} antialiased`}
             >
-                <TanStackQueryProvider>
-                    <ThemeProvider
-                        attribute="class"
-                        defaultTheme="system"
-                        enableSystem
-                        disableTransitionOnChange
-                    >
-                        <Header />
-                        {children}
-                        <Toaster richColors closeButton />
-                    </ThemeProvider>
-                </TanStackQueryProvider>
+                <NuqsAdapter>
+                    <TanStackQueryProvider>
+                        <ThemeProvider
+                            attribute="class"
+                            defaultTheme="system"
+                            enableSystem
+                            disableTransitionOnChange
+                        >
+                            <Header />
+                            {children}
+                            <Toaster richColors closeButton />
+                        </ThemeProvider>
+                    </TanStackQueryProvider>
+                </NuqsAdapter>
             </body>
         </html>
     );
