@@ -2,6 +2,7 @@
 
 import { Post } from "@/app/api/posts/data";
 import { CardPost, CardPostSkeleton } from "@/app/basic/card-posts";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,8 +11,12 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { fetchWrapper } from "@/lib/fetch-wrappers";
-import { useQuery } from "@tanstack/react-query";
-import { XIcon } from "lucide-react";
+import {
+    QueryObserverResult,
+    RefetchOptions,
+    useQuery,
+} from "@tanstack/react-query";
+import { CircleXIcon, RotateCwIcon, XIcon } from "lucide-react";
 import { useQueryState } from "nuqs";
 import * as React from "react";
 import { useDebounce } from "use-debounce";
@@ -21,11 +26,15 @@ function SearchResults({
     isError,
     data,
     searchTerm,
+    refetch,
 }: {
     isLoading: boolean;
     isError: boolean;
     data: Post[] | undefined;
     searchTerm: string;
+    refetch: (
+        options?: RefetchOptions,
+    ) => Promise<QueryObserverResult<Post[], Error>>;
 }) {
     if (isLoading) {
         return (
@@ -39,9 +48,22 @@ function SearchResults({
 
     if (isError) {
         return (
-            <p className="text-destructive text-center">
-                An error occurred while fetching posts. Please try again.
-            </p>
+            <div className="flex flex-col items-center justify-center gap-2">
+                <Alert variant="destructive">
+                    <CircleXIcon className="h-4 w-4" />
+                    <AlertTitle>Could not fetch posts</AlertTitle>
+                    <AlertDescription>
+                        <p>
+                            An error occurred while fetching posts. Please try
+                            again.
+                        </p>
+                    </AlertDescription>
+                </Alert>
+                <Button onClick={() => refetch()} variant="secondary">
+                    <RotateCwIcon className="mr-1 h-4 w-4" />
+                    Try again
+                </Button>
+            </div>
         );
     }
 
@@ -72,7 +94,7 @@ export function Search() {
     });
     const [searchTermDebounced] = useDebounce(searchTerm, 300);
 
-    const { data, isLoading, isError } = useQuery({
+    const { data, isLoading, isError, refetch } = useQuery({
         queryKey: ["posts", "search", searchTermDebounced],
         queryFn: () =>
             fetchWrapper<Post[]>(`/api/posts/search?q=${searchTermDebounced}`),
@@ -121,6 +143,7 @@ export function Search() {
                         isError={isError}
                         data={data}
                         searchTerm={searchTermDebounced}
+                        refetch={refetch}
                     />
                 )}
             </div>
