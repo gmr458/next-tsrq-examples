@@ -1,7 +1,13 @@
 import { Post } from "@/app/api/posts/data";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -9,7 +15,9 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { formatDateTime } from "@/lib/date-time-format";
 import { fetchWrapper } from "@/lib/fetch-wrappers";
+import { formatTimeAgo } from "@/lib/relative-time-format";
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { CircleXIcon, Loader2Icon, RotateCwIcon } from "lucide-react";
 import * as React from "react";
@@ -24,7 +32,7 @@ export function CardPosts({ category }: CardPostsProps) {
         queryFn: () => fetchWrapper<Post[]>(`/api/posts?category=${category}`),
     });
 
-    const getTitle = () => {
+    const title = React.useMemo(() => {
         if (query.isFetching && query.failureCount > 0) {
             return `Retrying... Attempt #${query.failureCount + 1}`;
         }
@@ -35,12 +43,31 @@ export function CardPosts({ category }: CardPostsProps) {
             return "An Error Occurred";
         }
         return `Posts by ${category}`;
-    };
+    }, [
+        category,
+        query.failureCount,
+        query.isError,
+        query.isFetching,
+        query.isLoading,
+    ]);
+
+    const updatedAt = React.useMemo(() => {
+        if (query.dataUpdatedAt === 0) return "";
+        const formatted = formatDateTime(query.dataUpdatedAt);
+        return `Last update: ${formatted}`;
+    }, [query.dataUpdatedAt]);
+
+    const updatedAtRelative = React.useMemo(() => {
+        if (query.dataUpdatedAt === 0) return "";
+        const formatted = formatTimeAgo(query.dataUpdatedAt) || "";
+        if (formatted === "now") return "";
+        else return formatted;
+    }, [query.dataUpdatedAt]);
 
     return (
         <Card className="w-full lg:w-124">
             <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-xl">{getTitle()}</CardTitle>
+                <CardTitle className="text-xl">{title}</CardTitle>
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <Button
@@ -65,13 +92,22 @@ export function CardPosts({ category }: CardPostsProps) {
                     </TooltipContent>
                 </Tooltip>
             </CardHeader>
-            <CardContent>
+            <CardContent className="border-y">
                 <ScrollArea className="h-96">
-                    <div className="flex flex-col gap-4 pr-4">
+                    <div className="my-4 flex flex-col gap-4 pr-4">
                         <CardPostsContent query={query} />
                     </div>
                 </ScrollArea>
             </CardContent>
+            <CardFooter className="justify-between">
+                {updatedAt ? (
+                    <p className="text-sm">{updatedAt}</p>
+                ) : (
+                    <Skeleton className="h-5 w-52" />
+                )}
+
+                <p className="text-sm">{updatedAtRelative}</p>
+            </CardFooter>
         </Card>
     );
 }
@@ -126,7 +162,7 @@ function CardPostsContent({ query }: { query: UseQueryResult<Post[], Error> }) {
 
 export const CardPost = React.memo(function CardPost({ post }: { post: Post }) {
     return (
-        <Card>
+        <Card className="">
             <CardHeader>
                 <CardTitle>{post.title}</CardTitle>
             </CardHeader>
