@@ -1,27 +1,40 @@
-type Division = {
-    amount: number;
-    unit: Intl.RelativeTimeFormatUnit;
-};
+/**
+ * Formats a date into a relative time string (e.g., "2 hours ago", "in 3 days").
+ *
+ * @param date The date to format. Can be a Date object, a date string, or a timestamp number.
+ * @param locale A string with a BCP 47 language tag (e.g., 'en-US', 'es', 'fr'). Defaults to 'en-US'.
+ * @param options An object to customize the formatting, corresponding to Intl.RelativeTimeFormatOptions.
+ * @returns A formatted relative time string.
+ */
+export function formatRelativeTime(
+    date: Date | string | number,
+    locale: string = "en-US",
+    options: Intl.RelativeTimeFormatOptions = { numeric: "auto" },
+): string {
+    const rtf = new Intl.RelativeTimeFormat(locale, options);
+    const targetDate = new Date(date);
+    const now = new Date();
 
-const DIVISIONS: Division[] = [
-    { amount: 60, unit: "seconds" },
-    { amount: 60, unit: "minutes" },
-    { amount: 24, unit: "hours" },
-    { amount: 7, unit: "days" },
-    { amount: 4.34524, unit: "weeks" },
-    { amount: 12, unit: "months" },
-    { amount: Number.POSITIVE_INFINITY, unit: "years" },
-];
+    const diffInSeconds = (targetDate.getTime() - now.getTime()) / 1000;
 
-export function formatTimeAgo(timestamp: number) {
-    let durationSecs = (timestamp - Date.now()) / 1000;
+    // Define time units in seconds, from largest to smallest
+    const units: { unit: Intl.RelativeTimeFormatUnit; seconds: number }[] = [
+        { unit: "year", seconds: 31536000 },
+        { unit: "month", seconds: 2592000 },
+        { unit: "week", seconds: 604800 },
+        { unit: "day", seconds: 86400 },
+        { unit: "hour", seconds: 3600 },
+        { unit: "minute", seconds: 60 },
+        { unit: "second", seconds: 1 },
+    ];
 
-    for (let i = 0; i < DIVISIONS.length; i++) {
-        const division = DIVISIONS[i];
-        if (Math.abs(durationSecs) < division.amount) {
-            const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
-            return rtf.format(Math.round(durationSecs), division.unit);
+    for (const { unit, seconds } of units) {
+        if (Math.abs(diffInSeconds) >= seconds) {
+            const value = Math.round(diffInSeconds / seconds);
+            return rtf.format(value, unit);
         }
-        durationSecs /= division.amount;
     }
+
+    // Fallback for differences less than 1 second
+    return rtf.format(0, "second");
 }
