@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/tooltip";
 import { formatDateTime } from "@/lib/date-time-format";
 import { fetchWrapper } from "@/lib/fetch-wrappers";
-import { formatTimeAgo } from "@/lib/relative-time-format";
+import { formatRelativeTime, formatTimeAgo } from "@/lib/relative-time-format";
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { CircleXIcon, Loader2Icon, RotateCwIcon } from "lucide-react";
 import * as React from "react";
@@ -59,7 +59,7 @@ export function CardPosts({ category }: CardPostsProps) {
 
     const updatedAtRelative = React.useMemo(() => {
         if (query.dataUpdatedAt === 0) return "";
-        const formatted = formatTimeAgo(query.dataUpdatedAt) || "";
+        const formatted = formatRelativeTime(query.dataUpdatedAt) || "";
         if (formatted === "now") return "";
         else return formatted;
     }, [query.dataUpdatedAt]);
