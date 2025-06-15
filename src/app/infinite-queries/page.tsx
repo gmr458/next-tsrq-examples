@@ -3,6 +3,7 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
     Tooltip,
@@ -10,12 +11,12 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { formatDateTime } from "@/lib/date-time-format";
-import { fetchWrapper } from "@/lib/fetch-wrappers";
 import { formatRelativeTime } from "@/lib/relative-time-format";
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { CircleXIcon, Loader2Icon } from "lucide-react";
+import { CircleXIcon, Loader2Icon, SendIcon } from "lucide-react";
+import * as React from "react";
+import { toast } from "sonner";
 import { Comment } from "../api/comments/data";
-import { CommentsResponse } from "../api/comments/route";
+import { useInfiniteQueryComments, useMutationComments } from "./hooks";
 
 export default function Page() {
     const {
@@ -25,22 +26,15 @@ export default function Page() {
         fetchNextPage,
         hasNextPage,
         isFetchingNextPage,
-    } = useInfiniteQuery({
-        queryKey: ["comments"],
-        queryFn: ({ pageParam }) =>
-            fetchWrapper<CommentsResponse>(
-                `/api/comments?${pageParam ? `cursor=${pageParam}` : ""}`,
-            ),
-        initialPageParam: undefined as number | undefined,
-        getNextPageParam: (lastPage) => lastPage.nextCursor,
-    });
+    } = useInfiniteQueryComments();
 
     const comments = data?.pages.flatMap((page) => page.comments);
 
     return (
         <main className="flex flex-col items-center justify-center gap-5 py-8">
-            <h1 className="text-2xl">Infinite Queries</h1>
+            <h1 className="text-2xl">Infinite Queries &amp; Mutations</h1>
             <div className="flex w-full max-w-lg flex-col gap-4">
+                <AddComment />
                 {isLoading && <LoadingComments count={5} />}
                 {comments &&
                     comments.length > 0 &&
@@ -124,5 +118,71 @@ export function LoadingComments({ count }: { count: number }) {
                 <CardCommentSkeleton key={i} />
             ))}
         </>
+    );
+}
+
+export function AddComment() {
+    const [commentText, setCommentText] = React.useState<string>("");
+    const mutation = useMutationComments();
+    const commentTextIsEmpty = !commentText.trim();
+
+    const handleAddComment = () => {
+        if (!commentText.trim()) return;
+        mutation.mutate(
+            { text: commentText },
+            {
+                onSuccess: (data, variables, context) => {
+                    console.log({ data, variables, context });
+                    setCommentText("");
+                    toast.success("Comment added", { duration: 10000 });
+                },
+                onError: (_error, _variables, _context) => {
+                    toast.error("Error trying to add comment", {
+                        duration: 10000,
+                    });
+                },
+            },
+        );
+    };
+
+    return (
+        <div className="flex flex-row gap-2">
+            <Input
+                placeholder="Write your comment"
+                value={commentText}
+                disabled={mutation.isPending}
+                onChange={(e) => setCommentText(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddComment();
+                    }
+                }}
+            />
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button
+                        size="icon"
+                        disabled={commentTextIsEmpty || mutation.isPending}
+                        onClick={() => handleAddComment()}
+                    >
+                        {mutation.isPending ? (
+                            <Loader2Icon className="animate-spin" />
+                        ) : (
+                            <SendIcon />
+                        )}
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>
+                        {mutation.isPending
+                            ? "Loading..."
+                            : commentTextIsEmpty
+                              ? "Comment requires text"
+                              : "Send"}
+                    </p>
+                </TooltipContent>
+            </Tooltip>
+        </div>
     );
 }
