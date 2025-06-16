@@ -9,14 +9,6 @@ export const routes = [
     },
     {
         href: "/infinite-queries",
-        label: "Infinite Queries",
-    },
-    {
-        href: "/mutations",
-        label: "Mutations",
-    },
-    {
-        href: "/optimistic-updates",
-        label: "Optimistic Updates",
+        label: "Infinite Queries & Mutations",
     },
 ] as const;

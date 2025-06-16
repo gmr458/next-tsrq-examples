@@ -8,7 +8,7 @@ export default function Home() {
             <h1 className="text-center text-2xl font-bold">
                 TanStack React Query Examples
             </h1>
-            <div className="grid max-w-lg grid-cols-1 gap-4 lg:w-full lg:grid-cols-3 lg:gap-2">
+            <div className="grid max-w-2xl grid-cols-1 gap-4 lg:w-full lg:grid-cols-3 lg:gap-2">
                 {routes.map((route) => (
                     <Button
                         asChild

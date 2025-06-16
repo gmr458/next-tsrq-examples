@@ -37,7 +37,7 @@ export function useMutationComments() {
                 },
                 body: JSON.stringify(comment),
             }),
-        onSuccess: async (data, variables, context) => {
+        onSuccess: async (data, _variables, _context) => {
             await queryClient.cancelQueries({ queryKey });
             queryClient.setQueryData<
                 InfiniteData<CommentsResponse, unknown> | undefined

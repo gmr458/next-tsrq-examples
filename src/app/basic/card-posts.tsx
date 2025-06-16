@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/tooltip";
 import { formatDateTime } from "@/lib/date-time-format";
 import { fetchWrapper } from "@/lib/fetch-wrappers";
-import { formatRelativeTime, formatTimeAgo } from "@/lib/relative-time-format";
+import { formatRelativeTime } from "@/lib/relative-time-format";
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { CircleXIcon, Loader2Icon, RotateCwIcon } from "lucide-react";
 import * as React from "react";
