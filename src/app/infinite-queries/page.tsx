@@ -69,7 +69,7 @@ export default function Page() {
     );
 }
 
-export function CardComment({ comment }: { comment: Comment }) {
+function CardComment({ comment }: { comment: Comment }) {
     return (
         <Card>
             <CardContent className="flex flex-row gap-4">
@@ -97,7 +97,7 @@ export function CardComment({ comment }: { comment: Comment }) {
     );
 }
 
-export function CardCommentSkeleton() {
+function CardCommentSkeleton() {
     return (
         <Card>
             <CardContent className="flex flex-row gap-4">
@@ -111,7 +111,7 @@ export function CardCommentSkeleton() {
     );
 }
 
-export function LoadingComments({ count }: { count: number }) {
+function LoadingComments({ count }: { count: number }) {
     return (
         <>
             {Array.from({ length: count }).map((_, i) => (
@@ -121,7 +121,7 @@ export function LoadingComments({ count }: { count: number }) {
     );
 }
 
-export function AddComment() {
+function AddComment() {
     const [commentText, setCommentText] = React.useState<string>("");
     const mutation = useMutationComments();
     const commentTextIsEmpty = !commentText.trim();
